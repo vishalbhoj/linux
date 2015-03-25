@@ -619,6 +619,7 @@ config MMC_DW_EXYNOS
 
 config MMC_DW_HISI
         tristate "Hisi specific extensions for Synopsys DW Memory Card Interface"
+       depends on OF
 	depends on MMC_DW
 	select MMC_DW_PLTFM
 	select MMC_DW_IDMAC
