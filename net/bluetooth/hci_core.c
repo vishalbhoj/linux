@@ -39,6 +39,7 @@
 
 #include "hci_request.h"
 #include "hci_debugfs.h"
+#include "led.h"
 #include "smp.h"
 
 static void hci_rx_work(struct work_struct *work);
@@ -3164,6 +3165,10 @@ int hci_register_dev(struct hci_dev *hdev)
 	hci_dev_set_flag(hdev, HCI_SETUP);
 	hci_dev_set_flag(hdev, HCI_AUTO_OFF);
 
+	bluetooth_led_names(hdev);
+	bluetooth_led_init(hdev);
+
+
 	if (hdev->dev_type == HCI_BREDR) {
 		/* Assume BR/EDR support until proven otherwise (such as
 		 * through reading supported features during init.
@@ -3230,6 +3235,8 @@ void hci_unregister_dev(struct hci_dev *hdev)
 	BUG_ON(!list_empty(&hdev->mgmt_pending));
 
 	hci_notify(hdev, HCI_DEV_UNREG);
+
+	bluetooth_led_exit(hdev);
 
 	if (hdev->rfkill) {
 		rfkill_unregister(hdev->rfkill);
@@ -3314,6 +3321,8 @@ int hci_recv_frame(struct hci_dev *hdev, struct sk_buff *skb)
 	skb_queue_tail(&hdev->rx_q, skb);
 	queue_work(hdev->workqueue, &hdev->rx_work);
 
+	bluetooth_led_rx(hdev);
+
 	return 0;
 }
 EXPORT_SYMBOL(hci_recv_frame);
@@ -3369,6 +3378,8 @@ static void hci_send_frame(struct hci_dev *hdev, struct sk_buff *skb)
 		BT_ERR("%s sending frame failed (%d)", hdev->name, err);
 		kfree_skb(skb);
 	}
+
+	bluetooth_led_tx(hdev);
 }
 
 /* Send HCI command */
